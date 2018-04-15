@@ -1,4 +1,114 @@
-dependencies {
-    compile group: 'redis.clients', name: 'jedis', version: '2.8.1'
-    compile group: 'org.apache.commons', name: 'commons-pool2', version: '2.4.2'
+//see https://plugins.gradle.org/plugin/io.codearte.nexus-staging
+plugins {
+    id "io.codearte.nexus-staging" version "0.11.0"
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven'
+    apply plugin: 'signing'
+
+    group 'info.xiancloud'
+    version "$xianVersion"
+
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        testCompile group: 'junit', name: 'junit', version: '4.12'
+        compile group: 'info.xiancloud', name: 'xian-core', version: "${xianVersion}"
+    }
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+    tasks.withType(JavaCompile) {
+        options.encoding = "UTF-8"
+    }
+
+    task javadocJar(type: Jar) {
+        classifier = 'javadoc'
+        from javadoc
+    }
+
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    artifacts {
+        archives javadocJar, sourcesJar
+    }
+
+    //publish artifacts into private nexus
+    install {
+        repositories {
+            mavenDeployer {
+                repository(url: "${nexusUrl}/repository/maven-releases/") {
+                    authentication(userName: nexusUsername, password: nexusPassword)
+                }
+            }
+        }
+    }
+
+    task copyPlugins(type: Sync) {
+        from configurations.runtime
+        into 'plugins'
+    }
+
+    // Signature of artifacts
+    signing {
+        sign configurations.archives
+    }
+
+    // OSSRH publication
+    uploadArchives {
+        if ("true".equalsIgnoreCase(project.publishToMavenCentral))
+            repositories {
+                mavenDeployer {
+                    // POM signature
+                    beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+                    // Target repository
+                    repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                        authentication(userName: ossrhUser, password: ossrhPassword)
+                    }
+                    snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots') {
+                        authentication(userName: ossrhUser, password: ossrhPassword)
+                    }
+                    pom.project {
+                        name project.name
+                        description project.description
+                        packaging 'jar'
+                        url 'https://github.com/happyyangyuan/xian'
+
+                        scm {
+                            connection 'scm:git:https://github.com/happyyangyuan/xian.git'
+                            developerConnection 'scm:git:git@github.com:happyyangyuan/xian.git'
+                            url 'https://github.com/happyyangyuan/xian'
+                        }
+
+                        licenses {
+                            license {
+                                name 'Apache License'
+                                url 'http://www.apache.org/licenses/'
+                                distribution 'repo'
+                            }
+                        }
+
+                        developers {
+                            developer {
+                                id = 'happyyangyuan'
+                                name = 'happyyangyuan'
+                                email = 'happyyangyuan@163.com'
+                            }
+                        }
+                    }
+                }
+            }
+    }
+
+    nexusStaging {
+        username = ossrhUser
+        password = ossrhPassword
+    }
 }
