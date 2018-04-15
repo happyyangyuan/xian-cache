@@ -1,12 +1,16 @@
 package info.xiancloud.redis.api;
 
 import info.xiancloud.core.support.cache.api.CacheMapUtil;
+import io.reactivex.functions.Consumer;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class MapApi {
 
@@ -22,27 +26,24 @@ public class MapApi {
 
     @Test
     public void exists() {
-        boolean exists = CacheMapUtil.exists("MAP_API");
-        Assert.assertFalse(exists);
+        CacheMapUtil.exists("MAP_API")
+                .subscribe((Consumer<Boolean>) Assert::assertFalse);
     }
 
     @Test
     public void containsKey() {
-        boolean containsKey = CacheMapUtil.containsKey("MAP_API", "MAP");
-        Assert.assertFalse(containsKey);
+        CacheMapUtil.containsKey("MAP_API", "MAP")
+                .subscribe((Consumer<Boolean>) Assert::assertFalse);
     }
 
     @Test
     public void size() {
-        long size = CacheMapUtil.size("MAP_API");
-        assert size >= 0;
+        CacheMapUtil.size("MAP_API").subscribe(size -> Assert.assertTrue(size >= 0));
     }
 
     @Test
     public void isEmpty() {
-        boolean isEmpty = CacheMapUtil.isEmpty("MAP_API");
-
-        System.out.println(isEmpty);
+        CacheMapUtil.isEmpty("MAP_API").subscribe(System.out::println);
     }
 
     @Test
@@ -65,30 +66,37 @@ public class MapApi {
     public void get() {
         CacheMapUtil.put("MAP_API", "put_key_0", "put_value_0");
 
-        String value = CacheMapUtil.get("MAP_API", "put_key_0", String.class);
-
-        Assert.assertEquals("put_value_0", value);
+        CacheMapUtil.get("MAP_API", "put_key_0", String.class)
+                .subscribe(value -> {
+                    Assert.assertEquals("put_value_0", value);
+                });
     }
 
     @Test
     public void getAll() {
-        Map<String, String> maps = CacheMapUtil.getAll("MAP_API", String.class, String.class);
-        for (Map.Entry<String, String> entry : maps.entrySet()) {
-            System.out.println(entry.getKey() + " : " + entry.getValue());
-        }
+        CacheMapUtil.getAll("MAP_API", String.class, String.class)
+                .subscribe(maps -> {
+                    for (Map.Entry<String, String> entry : maps.entrySet()) {
+                        System.out.println(entry.getKey() + " : " + entry.getValue());
+                    }
+                });
     }
 
     @Test
     public void remove() {
         CacheMapUtil.put("MAP_API", "put_key_0", "put_value_0");
 
-        boolean remove = CacheMapUtil.remove("MAP_API", "put_key_0");
-        System.out.println(remove);
-        Assert.assertTrue(remove);
+        CacheMapUtil.remove("MAP_API", "put_key_0")
+                .subscribe(remove -> {
+                    System.out.println(remove);
+                    Assert.assertTrue(remove);
+                });
 
-        boolean containsKey = CacheMapUtil.containsKey("MAP_API", "put_key_0");
-        System.out.println(containsKey);
-        Assert.assertFalse(containsKey);
+        CacheMapUtil.containsKey("MAP_API", "put_key_0")
+                .subscribe(containsKey -> {
+                    System.out.println(containsKey);
+                    Assert.assertFalse(containsKey);
+                });
     }
 
     @Test
@@ -104,27 +112,29 @@ public class MapApi {
 
     @Test
     public void clear() {
-        boolean clear = CacheMapUtil.clear("MAP_API");
-        Assert.assertTrue(clear);
+        CacheMapUtil.clear("MAP_API").subscribe((Consumer<Boolean>) Assert::assertTrue);
 
-        long size = CacheMapUtil.size("MAP_API");
-        assert size >= 0;
+        CacheMapUtil.size("MAP_API").subscribe(size -> Assert.assertTrue(size >= 0));
     }
 
     @Test
     public void keys() {
-        Set<String> keys = CacheMapUtil.keys("MAP_API", String.class);
-        for (String key : keys) {
-            System.out.println(key);
-        }
+        CacheMapUtil.keys("MAP_API", String.class)
+                .subscribe(keys -> {
+                    for (String key : keys) {
+                        System.out.println(key);
+                    }
+                });
     }
 
     @Test
     public void values() {
-        List<String> values = CacheMapUtil.values("MAP_API", String.class);
-        for (String value : values) {
-            System.out.println(value);
-        }
+        CacheMapUtil.values("MAP_API", String.class)
+                .subscribe(values -> {
+                    for (String value : values) {
+                        System.out.println(value);
+                    }
+                });
     }
 
 }

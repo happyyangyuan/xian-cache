@@ -2,8 +2,7 @@ package info.xiancloud.redis.distributed_lock;
 
 import com.alibaba.fastjson.JSONObject;
 import info.xiancloud.core.conf.XianConfig;
-import info.xiancloud.core.message.UnitResponse;
-import info.xiancloud.core.message.Xian;
+import info.xiancloud.core.message.SingleRxXian;
 import info.xiancloud.core.support.cache.CacheService;
 import info.xiancloud.core.support.cache.lock.DistributedLockSynchronizer;
 import info.xiancloud.core.thread_pool.ThreadPoolManager;
@@ -119,7 +118,7 @@ public class DistributedLockTest {
             LOG.error(e);
         }
 
-        Xian.call("diyMonitor", "jedisLockMonitor", new JSONObject());
+        SingleRxXian.call("diyMonitor", "jedisLockMonitor", new JSONObject());
     }
 
     @Test
@@ -206,16 +205,17 @@ public class DistributedLockTest {
             LOG.error(e);
         }
 
-        UnitResponse unitResponseObject = Xian.call(CacheService.CACHE_SERVICE, "cacheKeys", new JSONObject() {{
+        SingleRxXian.call(CacheService.CACHE_SERVICE, "cacheKeys", new JSONObject() {{
             put("pattern", "LOCK_QPS_*");
-        }});
-        if (unitResponseObject.succeeded() && unitResponseObject.getData() != null) {
-            Set<String> keys = unitResponseObject.getData();
+        }}).subscribe(unitResponseObject -> {
+            if (unitResponseObject.succeeded() && unitResponseObject.getData() != null) {
+                Set<String> keys = unitResponseObject.getData();
 
-            LOG.info(String.format("分布锁剩余数量: %s", keys.size()));
-        }
+                LOG.info(String.format("分布锁剩余数量: %s", keys.size()));
+            }
+            SingleRxXian.call("diyMonitor", "jedisLockMonitor", new JSONObject());
+        });
 
-        Xian.call("diyMonitor", "jedisLockMonitor", new JSONObject());
     }
 
 }

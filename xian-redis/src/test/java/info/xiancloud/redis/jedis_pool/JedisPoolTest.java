@@ -27,10 +27,6 @@ public class JedisPoolTest {
     public void numActive() {
         ThreadPoolManager.execute(() -> {
             for (int i = 0; i < 500; i++) {
-//                ThreadPoolManager.scheduleWithFixedDelay(() -> {
-//                    CacheListUtil.length("LIST_API");
-//                }, 10);
-
                 CacheListUtil.length("LIST_API");
             }
         });
@@ -44,7 +40,7 @@ public class JedisPoolTest {
 
         try {
             Thread.sleep(10 * 60 * 1000);
-        } catch (Exception e) {
+        } catch (Exception ignored) {
 
         }
     }
